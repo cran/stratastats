@@ -6,8 +6,8 @@
 \usage{
 stratastats(
   input.data,
-  variable.names = NULL,
-  stratifying.variable.name = NULL,
+  variable.names = c("Var1", "Var2"),
+  stratifying.variable.name = "Var3",
   flip.or = FALSE,
   table.font.size = 13,
   source.note.font.size = 11
@@ -17,67 +17,89 @@ stratastats(
 \item{input.data}{A list of 2x2 contingency tables or a 3-dimensional array where each 2x2 slice along the third
 dimension represents a stratum.}
 
-\item{variable.names}{Optional. A character vector containing the names of the two variables being cross-tabulated.
-If not provided for a 3D array, they are extracted from the array's dimnames.
-For a list of tables, these must be provided.}
+\item{variable.names}{A character vector containing the names of the two variables being cross-tabulated. Default is "Var1" and "Var2".
+If not provided for a 3D array, they are extracted from the array's dimnames.}
 
-\item{stratifying.variable.name}{Optional. A character vector containing the name of the stratifying variable.
+\item{stratifying.variable.name}{A character vector containing the name of the stratifying variable. Default is "Var3".
 If not provided for a 3D array, it is extracted from the array's dimnames.}
 
 \item{flip.or}{Optional. Logical value indicating whether to flip the odds ratio (default is FALSE).
 If TRUE, the reciprocal of the OR is calculated.}
 
-\item{table.font.size}{Optional. Font size for the tables in the output (default is 13).}
+\item{table.font.size}{Optional. Font size for the output table (default is 13).}
 
-\item{source.note.font.size}{Optional. Font size for the source notes in the output (default is 11).}
+\item{source.note.font.size}{Optional. Font size for the source notes in the output table (default is 11).}
 }
 \value{
 A list containing the following elements:
 \itemize{
-  \item \code{odds_ratios}: A data frame of odds ratios and their 95 percent confidence intervals for each stratum and the marginal table.
-   \item \code{partial_chi_sq_results}: A character vector storing the result of the chi-squared test for each partial table.
-   \item \code{marginal_chi_sq_result}: A character vector storing the result of the chi-squared test for the marginal table.
-   \item \code{cmh_test_result}: Result of the Cochran-Mantel-Haenszel test, providing an overall measure of association
+  \item \code{odds.ratios}: A data frame of odds ratios and their 95 percent confidence intervals for each stratum and the marginal table.
+   \item \code{partial.chisq.result}: A character vector storing the result of the chi-squared test for each partial table.
+   \item \code{marginal.chisq.result}: A character vector storing the result of the chi-squared test for the marginal table.
+   \item \code{cmh.test.result}: Result of the Cochran-Mantel-Haenszel test, providing an overall measure of association
     while accounting for stratification.
-   \item \code{breslow_day_test_result}: Result of the Breslow-Day-Tarone test, used to assess the homogeneity of the odds ratios
-    across different strata.
+    \item \code{mh.test.result}: Result of the Mantel-Haenszel test, used to assess the homogeneity of the odds ratios
+    across strata.
+   \item \code{bdt.test.result}: Result of the Breslow-Day-Tarone test, used to assess the homogeneity of the odds ratios
+    across strata.
   }
 }
 \description{
-This function performs a comprehensive stratified analysis of 2x2 contingency tables. It calculates odds ratios (OR),
-95 percent confidence intervals (CI), and conducts chi-squared tests, Cochran-Mantel-Haenszel (CMH) tests, and
-Breslow-Day-Tarone tests for homogeneity of the odds ratios across strata. Additionally, it produces a
-nicely-formatted table using the \code{\link[gt]{gt}} package, which includes both the results and their
-interpretation, facilitating easier understanding and presentation of the analysis. The function is designed
+This function performs a comprehensive stratified analysis of 2x2 contingency tables. It calculates odds ratios,
+95 percent confidence intervals, conducts chi-squared tests, Cochran-Mantel-Haenszel tests for conditional
+independence, Mantel-Haenszel and Breslow-Day-Tarone tests for homogeneity of odds ratios across strata.
+Additionally, it produces a nicely-formatted table using the \code{\link[gt]{gt}} package, which includes both the results
+and their interpretation, facilitating easier understanding and presentation of the analysis. The function is designed
 to work with either a list of 2x2 tables or a 3-dimensional array representing stratified tables.\cr
 Visit this \href{https://drive.google.com/file/d/1ofS6COi6RFzNm-0K5-uZqeRQN4gu0T-i/view?usp=sharing}{LINK} to access
-the package's vignette.\cr
+the package's vignette.
 }
 \details{
-The function employs statistical techniques appropriate for stratified data analysis. The odds ratio for each stratum
-and the combined strata (marginal table) are calculated. Confidence intervals are derived based on the standard
-error of the log odds ratio. Chi-squared tests are conducted for each table to assess the association between the
-variables at each level of the stratifying variable. The CMH test assesses the overall association while accounting for
-stratification. The Breslow-Day-Tarone test, implemented from Michael Hoehle's function (see References), evaluates
-the homogeneity of odds ratios across strata.\cr
+The function employs statistical techniques appropriate for stratified data analysis.
+
+The odds ratio for each stratum and the combined strata (marginal table) are calculated. Confidence intervals are
+derived based on the standard error of the log odds ratio.
+
+Chi-squared tests are conducted for each table to assess the association between the variables at each level of the
+stratifying variable.
+
+The Cochran-Mantel-Haenszel (CMH) test assesses the overall association while accounting for stratification.
+
+The Mantel-Haenszel (MH) test and the Breslow-Day-Tarone (BDT) test evaluate the homogeneity of odds ratios
+across strata. The latter test uses the code implemented by Michael Hoehle (see References).\cr
 
 The output includes a detailed breakdown of the odds ratios, confidence intervals, and test statistics for each
 stratum and the marginal table. It also presents combined results with annotations explaining the significance and
-implications of the tests.\cr
+implications of the tests.
 
-Interpretational Scenarios:\cr
+Interpretational Scenarios:
 
-1. Significant CMH test with homogeneity (non-significant Breslow-Day-Tarone test): Indicates conditional dependence and
-consistent association across strata. The common odds ratio (from CMH test) is a reliable summary of the association.\cr
+1. Significant CMH test with homogeneity (non-significant MH and BDT test): Indicates conditional dependence and
+consistent association across strata. The common odds ratio is a reliable summary of the association.
 
-2. Significant CMH test with heterogeneity (significant Breslow-Day-Tarone test): Suggests conditional dependence and
+2. Significant CMH test with heterogeneity (significant MH and BDT test): Suggests conditional dependence and
 varying strength or direction of association across strata (interaction), cautioning against a simple summary
-of the association.\cr
+of the association.
 
-3. Non-significant CMH test: Implies conditional independence.\cr
+3. Non-significant CMH test with homogeneity (non-significant MH and BDT test): Implies conditional independence and
+consistent association across strata. The common odds ratio is a reliable summary of the association.
 
-Note that the interpretation guidelines provided by the function are suggested based on the statistical tests' outcomes
-and should be further evaluated within the context of your study.
+4. Non-significant CMH test with heterogeneity (significant MH and BDT test): Since not all the conditional odds ratios are
+in the same direction, the result of the CMH test might not be reliable. Evaluating the
+stratum-specific chi-squared tests should be considered.
+
+Note that:
+
+(1) the interpretation guidelines provided by the function are suggested based on the statistical tests' outcomes
+and should be further evaluated within the context of your study;
+
+(2) in case a table features a zero along any of the diagonals, the Haldane-Anscombe correction is applied
+for the calculation of the odds ratios and to internally compute the weights used in the Mantel-Haenszel test
+of homogeneity. The correction consists in adding 0.5 to every cell of the table.
+The original data, on which all the other tests are based, remain unchanged.
+
+On the correction, see for example: Fleiss et al 2003; Pagano-Gauvreau 2018. See the latter also for the application
+of the correction in the calculation of the weights used in the Mantel-Haenszel test.
 }
 \examples{
 
@@ -137,10 +159,16 @@ New York: Routledge.
 Breslow, N. E., & Day, N. E. (1980). Statistical methods in cancer research. Volume I -
 The analysis of case-control studies. IARC Scientific Publications.
 
+Fleiss, J. L., Levin, B., & Paik, M. C. 2003. Statistical Methods for Rates and Proportions (3rd ed.). Wiley.
+
 Hoehle, M. (2000). Breslow-Day-Tarone Test.
 Retrieved from https://online.stat.psu.edu/onlinecourses/sites/stat504/files/lesson04/breslowday.test_.R
 
 Lachin, J. M. (2000). Biostatistical methods: The assessment of relative risks. Wiley.
+
+Pagano, M., & Gauvreau, K. (2018). Principles of Biostatistics (2nd ed.). Chapman and Hall/CRC.
+
+Sheskin, D. J. (2011). Handbook of parametric and nonparametric statistical procedures (5th ed.). Chapman & Hall/CRC
 }
 \seealso{
 Refer to \code{\link{chisq.test}} for chi-squared tests, and to
